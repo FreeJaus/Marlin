@@ -36,3 +36,7 @@ Endstop connectors in the GT2560A+ are connected to pins 58, 60, 72, 74, 76 and 
 ## marlin-config
 
 [akaJes/marlin-config](https://github.com/akaJes/marlin-config) is a very interesting project, but dependencies (nodejs, electron, 'native' git...) make it uneasy to install. It's be useful to have a docker image, so that only drivers need to be installed on the host.
+
+### Offset viewer
+
+Visual feedback of bed, nozzle, sensor... offsets.

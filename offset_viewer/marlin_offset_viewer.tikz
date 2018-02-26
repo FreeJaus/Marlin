@@ -1,0 +1,138 @@
+%\tikzstyle{comment} = [minimum width=5cm, text width=5cm, gray];
+%\tikzstyle{tag} = [draw,orange]; %BurntOrange
+%\tikzstyle{branch} = [draw,blue]; %OliveGreen
+%\tikzstyle{commit} = [draw,fill=white,circle,inner sep=0.125em];
+
+%\pgfdeclarelayer{background}
+%\pgfsetlayers{background,main}
+
+\usetikzlibrary{calc}
+
+\begin{tikzpicture}[node distance=1cm]
+% The size of the hot bed
+\def\xHotBedSize{21.5}
+\def\yHotBedSize{21.5}
+
+% The size of the glass
+\def\xGlassBedSize{21}
+\def\yGlassBedSize{20}
+
+% The size of the print bed
+\def\xBedSize{20}
+\def\yBedSize{20}
+
+% Z Probe to nozzle (X,Y) offset, relative to (0, 0).
+% X and Y offsets must be integers (mm)
+\def\xProbeOffsetFromExtruder{.4}        % X offset: -left  +right  [of the nozzle]
+\def\yProbeOffsetFromExtruder{-4.4}     % Y offset: -front +behind [the nozzle]
+\def\zProbeOffsetFromExtruder{-.145}   % Z offset: -below +over [the nozzle]
+
+\def\xHome{.5*\xBedSize}
+\def\yHome{.5*\yBedSize}
+
+%#define Z_CLEARANCE_DEPLOY_PROBE   10 // Z Clearance for Deploy/Stow
+%#define Z_CLEARANCE_BETWEEN_PROBES  5 // Z Clearance between probe points
+
+% Travel limits (mm) after homing, corresponding to endstop positions.
+\def\xMinPos{-1.2}
+\def\yMinPos{-.8}
+\def\zMinPos{0}
+\def\xMaxPos{-\xMinPos+\xBedSize}
+\def\yMaxPos{-\yMinPos+\yBedSize}
+\def\zMaxPos{200}
+
+% Set the number of grid points per dimension.
+\def\xGridMaxPoints{4}
+\def\yGridMaxPoints{\xGridMaxPoints}
+
+%  // The Z probe minimum outer margin (to validate G29 parameters).
+%  #define MIN_PROBE_EDGE 10
+
+%  // Set the boundaries for probing (where the probe can reach).
+\def\leftProbeBedPosition{1}
+\def\rightProbeBedPosition{\xMaxPos - \xProbeOffsetFromExtruder - 14}
+\def\frontProbeBedPosition{1.5}
+\def\backProbeBedPosition{\yMaxPos + \yProbeOffsetFromExtruder - 25}
+
+%---
+
+\def\xMesh{.8*\xBedSize}
+\def\yMesh{.7*\yBedSize}
+
+%  #define ABL_PROBE_PT_1_X 15
+%  #define ABL_PROBE_PT_1_Y 180
+%  #define ABL_PROBE_PT_2_X 15
+%  #define ABL_PROBE_PT_2_Y 20
+%  #define ABL_PROBE_PT_3_X 170
+%  #define ABL_PROBE_PT_3_Y 20
+
+%  #define UBL_PROBE_PT_1_X 39       // Probing points for 3-Point leveling of the mesh
+%  #define UBL_PROBE_PT_1_Y 180
+%  #define UBL_PROBE_PT_2_X 39
+%  #define UBL_PROBE_PT_2_Y 20
+%  #define UBL_PROBE_PT_3_X 180
+%  #define UBL_PROBE_PT_3_Y 20
+
+%#if ENABLED(Z_SAFE_HOMING)
+%  #define Z_SAFE_HOMING_X_POINT ((xBedSize) / 2)    // X point for Z homing when homing all axes (G28).
+%  #define Z_SAFE_HOMING_Y_POINT ((yBedSize) / 2)    // Y point for Z homing when homing all axes (G28).
+%#endif
+
+  \coordinate (o) at (0,0);
+
+  \draw (o) circle (.1);
+  \node[] () at ($(o)+(.75,-.5)$) {$(0,0)$};
+
+  \draw[->] ($(o)+(.5,.5)$) -- ($(o)+(1,.5)$);
+  \draw[->] ($(o)+(.5,.5)$) -- ($(o)+(.5,1)$);
+  \node[] () at ($(o)+(1.25,.5)$) {$X$};
+  \node[] () at ($(o)+(.5,1.25)$) {$Y$};
+
+  \coordinate (h) at ($(o)+(\xHome,\yHome)$);                    % h: home
+  \coordinate (s) at ($(o)+(\xBedSize,\yBedSize)$);              % s: bed size
+  \coordinate (min) at ($(o)+(\xMinPos,\yMinPos)$);             % p: min pos (allowed area offset)
+  \draw[cyan,dashed] (min) rectangle($(s)-(min)$);                 % allowed area
+  \draw[red] (o)  rectangle (\xHotBedSize,\yHotBedSize);       % hot bed
+  \coordinate (g) at (.25,.75);                                                % g: glass offset
+  \draw[blue, densely dashed] ($(o)+(g)$)  rectangle ($(g)+(\xGlassBedSize,\yGlassBedSize)$); % glass bed
+  \draw[] (o) rectangle (s);                                                       % printable area
+
+%  \coordinate (t) at ($(n)-(p)$);
+  
+  \node[] () at ($(o)+(.5*\xHotBedSize,-2)$) {FRONT};
+  \node[] () at ($(o)+(.5*\xHotBedSize,1+\yHotBedSize)$) {BACK};
+  \node[rotate=90] () at ($(o)+(-2,.5*\yHotBedSize)$) {LEFT};
+  \node[rotate=90] () at ($(o)+(1+\xHotBedSize,.5*\yHotBedSize)$) {RIGHT};
+
+  \coordinate (pmin) at ($(o)+(\leftProbeBedPosition, \frontProbeBedPosition)$);
+  \coordinate (pmax) at ($(o)+(\rightProbeBedPosition, \backProbeBedPosition)$);
+
+  %\draw [yellow,help lines] (0,0) grid[xstep=.25*\xMesh,ystep=.25*\yMesh] (pmax);
+
+
+
+%\def\leftProbeBedPosition{1}
+%\def\rightProbeBedPosition{1} %xMaxPos - xProbeOffsetFromExtruder - 14)
+%\def\frontProbeBedPosition{1.5}
+%\def\backProbeBedPosition{1} %(yMaxPos + yProbeOffsetFromExtruder - 25)
+
+
+  %\def\xProbe{\x+\xProbeOffsetFromExtruder}
+  %\def\yProbe{\y+\yProbeOffsetFromExtruder}
+
+  %\filldraw (\x,\y) circle (.1);
+
+  %\draw[green] (\x,\y)  rectangle (\xProbe,\yProbe);
+  %\filldraw[green] (\xProbe, \yProbe) circle (.1);
+
+  %\draw[<->] ($(a)+(\x-.5,\y) -- ($(a)+(\x+.5,\y)$);
+  %\draw[<->] ($(a)+(\x,\y-.5) -- ($(a)+(\x,\y+.5)$);
+  %\node[] () at ($(a)+(\x-1,\y)$) {$-$};
+  %\node[] () at ($(a)+(\x+1,\y)$) {$+$};
+  %\node[] () at ($(a)+(\x,\y-1)$) {$-$};
+  %\node[] () at ($(a)+(\x,\y+1)$) {$+$};
+
+  %\node[pin=30:{nozzle}] () at (\x,\y) {}; %(x, y)
+  %\node[pin=30:{probe}] () at (\xProbe,\yProbe) {}; %(x + xProbeOffsetFromExtruder, y + yProbeOffsetFromExtruder)
+
+\end{tikzpicture}
